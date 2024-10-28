@@ -5,7 +5,11 @@ import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.example.bluromatic.DELAY_TIME_MILLIS
 import com.example.bluromatic.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
 
 private const val TAG = "BlurWorker"
 class BlurWorker(ctx: Context, params: WorkerParameters): CoroutineWorker(ctx, params) {
@@ -14,27 +18,32 @@ class BlurWorker(ctx: Context, params: WorkerParameters): CoroutineWorker(ctx, p
             applicationContext.resources.getString(R.string.blurring_image),
             applicationContext
         )
-        return try {
-            val picture = BitmapFactory.decodeResource(
-                applicationContext.resources,
-                R.drawable.android_cupcake
-            )
-            val output = blurBitmap(picture, 1)
+        return withContext(Dispatchers.IO){
+            return@withContext try {
+                // This is an utility function added to emulate slower work.
+                delay(DELAY_TIME_MILLIS)
 
-            val outputUri = writeBitmapToFile(applicationContext, output)
+                val picture = BitmapFactory.decodeResource(
+                    applicationContext.resources,
+                    R.drawable.android_cupcake
+                )
+                val output = blurBitmap(picture, 1)
 
-            makeStatusNotification(
-                "Output is $outputUri",
-                applicationContext
-            )
-            Result.success()
-        } catch (throwable: Throwable){
-            Log.e(
-                TAG,
-                applicationContext.resources.getString(R.string.error_applying_blur),
-                throwable
-            )
-            Result.failure()
+                val outputUri = writeBitmapToFile(applicationContext, output)
+
+                makeStatusNotification(
+                    "Output is $outputUri",
+                    applicationContext
+                )
+                Result.success()
+            } catch (throwable: Throwable){
+                Log.e(
+                    TAG,
+                    applicationContext.resources.getString(R.string.error_applying_blur),
+                    throwable
+                )
+                Result.failure()
+            }
         }
     }
 }
